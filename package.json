@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "flowbite": "^2.4.1",
     "flowbite-react": "^0.10.1",
     "next": "14.2.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "use-axios-client": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
