@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from '../components/Sidebar';
 
-
 const MyComponent = () => {
     const [teams, setTeams] = useState([]);
     const [error, setError] = useState({});
@@ -52,7 +51,7 @@ const MyComponent = () => {
         <div>
             <Sidebar />
             <div className="relative overflow-x-auto">
-                <div className="block w-11/12 text-white rounded-lg shadow">
+                <div className="block w-11/12 mx-auto text-white rounded-lg shadow">
                     <div className="m-5 pb-10 pt-10">
                         <div className="flex justify-between">
                             <h5 className="mb-1 ml-5 text-3xl font-medium">Basketball Teams</h5>
@@ -88,7 +87,7 @@ const MyComponent = () => {
                         )}
 
                         <div className="flex items-center justify-center">
-                            <div className="relative overflow-x-auto flex w-full mt-3 flex items-center shadow-md rounded-lg">
+                            <div className="relative overflow-x-auto w-full mt-3 shadow-md rounded-lg">
                                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 rounded-lg">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
