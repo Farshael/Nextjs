@@ -41,7 +41,6 @@ const MyComponent = () => {
     };
 
     const fetchTeamStats = async (teamId, retryCount = 0) => {
-
         if (teamStatsCache.current.has(teamId)) {
             setTeamStats(teamStatsCache.current.get(teamId));
             return;
@@ -64,7 +63,6 @@ const MyComponent = () => {
             }
         } catch (err) {
             if (err.response && err.response.status === 429 && retryCount < 3) {
-        
                 setTimeout(() => {
                     fetchTeamStats(teamId, retryCount + 1);
                 }, Math.pow(2, retryCount) * 1000); 
@@ -181,7 +179,9 @@ const MyComponent = () => {
                                 <>
                                     <p className="mb-2"><strong>League: {teamStats.league?.name || 'N/A'}</strong></p>
                                     <p className="mb-2"><strong>Season: {teamStats.league?.season || 'N/A'}</strong></p>
-                                    <p className="mb-2"><strong>Team: {teamStats.team?.name || 'N/A'}</strong></p>
+                                    <p className="mb-2"><strong>Wins: {teamStats.games?.wins?.all?.total || 'N/A'}</strong></p>
+                                    <p className="mb-2"><strong>Losses: {teamStats.games?.loses?.all?.total || 'N/A'}</strong></p>
+                                    <p className="mb-2"><strong>Draws: {teamStats.games?.draws?.all?.total || 'N/A'}</strong></p>
                                 </>
                             ) : (
                                 <p>No statistics available for the selected team.</p>

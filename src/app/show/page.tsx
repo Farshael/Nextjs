@@ -1,8 +1,9 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Sidebar from '../components/Sidebar';
+import { useRouter } from "next/navigation";
 
 const MyComponent = () => {
     const [leagues, setLeagues] = useState([]);
@@ -10,6 +11,16 @@ const MyComponent = () => {
     const [seasons, setSeasons] = useState([]);
     const [isPopupVisible, setPopupVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const seasonsCache = useRef(new Map());
+    const router = useRouter();
+
+    const instance = axios.create({
+        baseURL: 'https://api-basketball.p.rapidapi.com/',
+        headers: {
+            'x-rapidapi-host': 'api-basketball.p.rapidapi.com',
+            'x-rapidapi-key': '4164a9c241mshd079f20eb5a2479p1215e3jsn726445616dfe'
+        }
+    });
 
     useEffect(() => {
         fetchLeagues();
@@ -17,12 +28,7 @@ const MyComponent = () => {
 
     const fetchLeagues = async () => {
         try {
-            const response = await axios.get('https://api-basketball.p.rapidapi.com/leagues', {
-                headers: {
-                    'x-rapidapi-host': 'api-basketball.p.rapidapi.com',
-                    'x-rapidapi-key': '4164a9c241mshd079f20eb5a2479p1215e3jsn726445616dfe'
-                }
-            });
+            const response = await instance.get('leagues');
             console.log('Leagues Data:', response.data.response);
             setLeagues(response.data.response);
         } catch (error) {
@@ -31,20 +37,30 @@ const MyComponent = () => {
         }
     };
 
-    const fetchSeasons = async (leagueId) => {
+    const fetchSeasons = async (leagueId, retryCount = 0) => {
+        if (seasonsCache.current.has(leagueId)) {
+            setSeasons(seasonsCache.current.get(leagueId));
+            return;
+        }
+
         try {
-            const response = await axios.get(`https://api-basketball.p.rapidapi.com/seasons?league=${leagueId}`, {
-                headers: {
-                    'x-rapidapi-host': 'api-basketball.p.rapidapi.com',
-                    'x-rapidapi-key': '4164a9c241mshd079f20eb5a2479p1215e3jsn726445616dfe'
-                }
-            });
-            console.log('Seasons Data:', response.data);
-            setSeasons(response.data.response);
+            const response = await instance.get(`leagues?id=${leagueId}`);
+            console.log('League Details:', response.data.response);
+            const league = response.data.response[0];
+            if (league && league.seasons) {
+                const fetchedSeasons = league.seasons;
+                seasonsCache.current.set(leagueId, fetchedSeasons);
+                setSeasons(fetchedSeasons);
+            } else {
+                console.log('No seasons available for the selected league.');
+                setSeasons([]);
+            }
         } catch (error) {
-            if (error.response && error.response.status === 429) {
+            if (error.response && error.response.status === 429 && retryCount < 3) {
                 console.error('Rate limit exceeded. Retrying in 60 seconds.');
-                setTimeout(() => fetchSeasons(leagueId), 60000); // Retry after 60 seconds
+                setTimeout(() => fetchSeasons(leagueId, retryCount + 1), Math.pow(2, retryCount) * 1000);
+            } else if (error.response && error.response.status === 401) {
+                router.push('/login?message=' + encodeURIComponent('Anda Belum Login!'));
             } else {
                 console.error('Error fetching seasons:', error);
                 setErrorMessage('Error fetching seasons. Please try again later.');
@@ -124,9 +140,9 @@ const MyComponent = () => {
                         </div>
                     )}
 
-                    {selectedLeague && (
-                        <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-10">
-                            <div className="bg-gray-800 text-white rounded-lg p-8">
+                    {isPopupVisible && selectedLeague && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                            <div className="bg-white rounded-lg p-8">
                                 <div className="flex items-center mb-4">
                                     <img src={selectedLeague.logo} alt={selectedLeague.name} className="w-8 h-8 mr-2" />
                                     <h2 className="text-xl font-bold">{selectedLeague.name}</h2>
@@ -152,13 +168,13 @@ const MyComponent = () => {
                                                 seasons.map((season, index) => (
                                                     <tr key={index} className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
                                                         <td className="px-6 py-4">
-                                                            {season.name}
+                                                            {season.season}
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            {season.start_date}
+                                                            {new Date(season.start).toLocaleDateString()}
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            {season.end_date}
+                                                            {new Date(season.end).toLocaleDateString()}
                                                         </td>
                                                     </tr>
                                                 ))
